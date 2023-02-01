@@ -9,7 +9,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     res.status(200).json(await getImaginedResponse(req));
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+      error,
+    });
   }
 }
 
@@ -20,9 +23,15 @@ export const getImaginedResponse = async (req: NextApiRequest) => {
     })
   );
 
-  // TODO SEND A REQUEST TO SPAM/ABUSE PROTECTION ENDPOINT FIRST
+  const prompt = `Imagine the JSON response of a GET call to a endpoint ${rebuildEndpoint(req.query)}. Give nothing but the imagined JSON please, that is, provide no explanation before or after the code.`;
 
-  console.log("Sending request to OpenAI");
+  const moderation = await openai.createModeration({
+    input: JSON.stringify(req.query),
+  });
+
+  const [result] = moderation.data.results;
+  if (result.flagged) throw Error("The prompt may violate OpenAI terms of service");
+  console.log(prompt, moderation.data.results);
 
   const completion = await openai.createCompletion({
     model: "text-davinci-003",
@@ -35,7 +44,6 @@ export const getImaginedResponse = async (req: NextApiRequest) => {
   });
 
   console.log("Received response from OpenAI");
-  console.log(completion);
 
   const responseContent = completion.data.choices[0].text as string;
 

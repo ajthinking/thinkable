@@ -4,10 +4,11 @@ import { useRouter } from 'next/router'
 export default function Home() {
   const router = useRouter()
   const [apiEndPoint, setApiEndpoint] = useState("/api/unicorns")
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
-  const goToApiEndpoint = () => {
-    
-
+  const goToApiEndpoint = () => {    
+    setIsRedirecting(true)
+    router.push(apiEndPoint)
   }
 
   return (
@@ -24,12 +25,21 @@ export default function Home() {
           placeholder="/api/magic-frogs/abilities"
           className="flex items-center justify-center self-center rounded bg-gray-300 py-1 px-2 font-mono text-gray-700" />
 
-        <div
-          onClick={() => router.push(apiEndPoint)}
-          className="cursor-pointer flex items-center justify-center self-center rounded bg-yellow-400 py-1 px-2 font-mono text-gray-700">Go!</div>
-      </div>
-      <div className="w-full mt-12 px-12">
-        <img alt="result" className="shadow-2xl" src="https://i.imgur.com/GN0pSdU.png" />    
+          {!isRedirecting && (
+            <div
+              onClick={goToApiEndpoint}
+              className="cursor-pointer flex items-center justify-center self-center rounded bg-yellow-400 py-1 px-2 font-mono text-gray-700"
+            >Go!</div>
+          )}
+          {isRedirecting && (
+            <div className="flex items-center justify-center self-center rounded bg-yellow-400 py-1 px-2 font-mono text-gray-700 animate-pulse">Building your API...</div>
+          )}
+        </div>
+      <div className="w-full px-12">      
+          {isRedirecting && (
+            <div className="flex items-center justify-center self-center text-xs mt-4 mb-2 font-mono text-gray-700">First time requests are painfully slow. Then we will cache it.</div>
+          )}      
+        <img alt="result" className="mt-12 shadow-2xl" src="https://i.imgur.com/GN0pSdU.png" />    
       </div>
     </div>
   )
