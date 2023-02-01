@@ -22,17 +22,20 @@ export const getImaginedResponse = async (req: NextApiRequest) => {
 
   // TODO SEND A REQUEST TO SPAM/ABUSE PROTECTION ENDPOINT FIRST
 
+  console.log("Sending request to OpenAI");
+
   const completion = await openai.createCompletion({
     model: "text-davinci-003",
-    prompt: `Imagine the JSON response of a GET call to a endpoint ${rebuildEndpoint(
-      req.query
-    )}. Give nothing but the imagined JSON please, that is, provide no explanation before or after the code. If the response is an array of items, please provide ~5 items.`,
+    prompt: `Imagine the JSON response of a GET call to a endpoint ${rebuildEndpoint(req.query)}. Give nothing but the imagined JSON please, that is, provide no explanation before or after the code.`,
     temperature: 0,
     max_tokens: 500,
     top_p: 1,
     frequency_penalty: 0.0,
     presence_penalty: 0.0,
   });
+
+  console.log("Received response from OpenAI");
+  console.log(completion);
 
   const responseContent = completion.data.choices[0].text as string;
 
