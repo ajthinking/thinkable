@@ -24,7 +24,9 @@ export const getImaginedResponse = async (req: NextApiRequest) => {
 
   const completion = await openai.createCompletion({
     model: "text-davinci-003",
-    prompt: `Imagine the JSON response of a GET call to a endpoint ${rebuildEndpoint(req.query)}. Give nothing but the imagined JSON please, that is, provide no explanation before or after the code.`,
+    prompt: `Imagine the JSON response of a GET call to a endpoint ${rebuildEndpoint(
+      req.query
+    )}. Give nothing but the imagined JSON please, that is, provide no explanation before or after the code. If the response is an array of items, please provide ~10 items.`,
     temperature: 0,
     max_tokens: 500,
     top_p: 1,
