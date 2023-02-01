@@ -1,4 +1,5 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import { PrismaClient } from "@prisma/client";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Configuration, OpenAIApi } from "openai";
 
@@ -25,6 +26,16 @@ export const getImaginedResponse = async (req: NextApiRequest) => {
 
   const prompt = `Imagine the JSON response of a GET call to a endpoint ${rebuildEndpoint(req.query)}. Give nothing but the imagined JSON please, that is, provide no explanation before or after the code.`;
 
+  // Look for a cached response
+  const prisma = new PrismaClient();
+  const endpoint = await prisma.endpoint.findFirst({
+    where: {
+      url: rebuildEndpoint(req.query),
+    },
+  });
+
+  if (endpoint) return endpoint.response;
+
   const moderation = await openai.createModeration({
     input: JSON.stringify(req.query),
   });
@@ -47,10 +58,18 @@ export const getImaginedResponse = async (req: NextApiRequest) => {
 
   const responseContent = completion.data.choices[0].text as string;
 
-  const responseJson = JSON.parse(responseContent);
-  if (!responseJson) throw new Error("Could not parse JSON");
+  const responseObject = JSON.parse(responseContent);
+  if (!responseObject) throw new Error("Could not parse JSON");
 
-  return responseJson;
+  await prisma.endpoint.create({
+    data: {
+      url: rebuildEndpoint(req.query),
+      method: "GET",
+      response: responseObject,
+    },
+  });
+
+  return responseObject;
 };
 
 export const rebuildEndpoint = (query: any): string => {
